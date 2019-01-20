@@ -31,7 +31,35 @@ def train_model(params):
             hyperparameters to use during training.
 
     """
-    raise NotImplementedError
+    estimator = tf.estimator.Estimator(
+    model.model_fn,
+    model_dir=params['model_dir'],
+    params=params,
+    config=tf.estimator.RunConfig(
+            save_checkpoints_steps=params['save_checkpoints_steps'],
+            save_summary_steps=params['save_summary_steps'],
+            log_step_count_steps=params['log_frequency'],
+            keep_checkpoint_max=3
+        )
+    )
+
+    sources = data.find_sources(params, mode='training')
+    train_spec = tf.estimator.TrainSpec(
+        lambda: data.input_fn(train_sources, True, params),
+        max_steps=params['max_steps']
+    )
+
+    sources = data.find_sources(params, mode='testing')
+    eval_spec = tf.estimator.EvalSpec(
+        lambda: data.input_fn(test_sources, False, params),
+        steps=params['eval_steps'],
+        start_delay_secs=params['start_delay_secs'],
+        throttle_secs=params['throttle_secs']
+    )
+
+    tf.logging.info("Start experiment....")
+
+    tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
 
 
 def eval_model(params):
@@ -43,6 +71,9 @@ def eval_model(params):
             hyperparameters to use during training.
 
     """
+
+    # Go through the documentation tf.estimator.Estimator (https://www.tensorflow.org/api_docs/python/tf/estimator/Estimator#evaluate)
+    # and try to implement this function.
     raise NotImplementedError
 
 if __name__ == '__main__':
@@ -50,11 +81,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('config', help="path to configuration file")
     parser.add_argument('--warm-start', action='store_true',
-        help="whether to start the model from checkpoints"
-    )
+        help="whether to start the model from checkpoints")
+    parser.add_argument('-e', '--evaluate', action='store_true',
+        help="whether to evaluate the model instead of training it")
     parser.add_argument('-v', '--verbosity', default='INFO',
-        choices=['DEBUG', 'ERROR', 'FATAL', 'INFO', 'WARM'],
-    )
+        choices=['DEBUG', 'ERROR', 'FATAL', 'INFO', 'WARM'])
+
     args = parser.parse_args()
     tf.logging.set_verbosity(args.verbosity)
 
@@ -71,4 +103,7 @@ if __name__ == '__main__':
 
     tf.logging.info("Using parameters: {}".format(params))
 
-    train_model(params)
+    if args.evaluate:
+        eval_model(params)
+    else:
+        train_model(params)

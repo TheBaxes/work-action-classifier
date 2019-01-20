@@ -99,7 +99,36 @@ def input_fn(sources, train, params):
 
     """
     
-    raise NotImplementedError
+    images, labels = zip(*sources)
+    images, labels = list(images), list(labels)
+
+    images = tf.data.Dataset.from_tensor_slices(images)
+    # Read images as binary data
+    images = images.map(lambda img: tf.read_file(img))
+    # Decode binary images
+    images = images.map(lambda img: tf.image.decode_image(img, channels=3))
+    # Cast the images to float32
+    images = 
+    # Normalize the images by dividing the images by 255.0
+    images = 
+    # Resize the images to the expected size given by the network
+    images = 
+
+    labels = tf.data.Dataset.from_tensor_slices(labels)
+
+    ds = tf.data.Dataset.zip((images, labels))
+
+    if train:
+        ds = ds.shuffle(buffer_size=params['shuffle_buffer'])
+        ds = ds.repeat(params['num_epochs'])
+
+    ds = ds.batch(params['batch_size'])
+    iterator = ds.make_one_shot_iterator()
+    images, labels = iterator.get_next()
+
+    features = {'image': images} 
+    
+return features, labels
 
 
 if __name__ == '__main__':

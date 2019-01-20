@@ -40,7 +40,7 @@ def model(inputs, num_classes, training):
     raise NotImplementedError
 
 
-def resnet_fn(features, labels, mode, params):
+def model_fn(features, labels, mode, params):
     """Model function required by the tf.estimator API
 
     This function is ment to be called with proper arguments by TensorFlow
@@ -60,5 +60,46 @@ def resnet_fn(features, labels, mode, params):
         An instance of tf.estimator.EstimatorSpec
 
     """  
+    # Define a boolean to be True if running on TRAIN mode and False otherwise
+    training = mode == tf.estimator.ModeKeys.TRAIN
 
-    raise NotImplementedError
+    # Get the logits from the model given the image
+    logits = model(features['image'], params['num_classes'], training)
+
+    predictions = {
+      # Compute the predictions by taking argmax of the logits
+      "classes": 
+      # Create probability predictions for each class by applying tf.nn.softmax
+      # to de logits.
+      "probabilities": 
+    }
+
+    if mode == tf.estimator.ModeKeys.PREDICT:
+        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
+
+    # Calculate Loss (for both TRAIN and EVAL modes) usign 
+    # tf.losses.sparse_softmax_cross_entropy
+    xentropy = 
+    loss = xentropy
+    # Configure the Training Op (for TRAIN mode)
+    if mode == tf.estimator.ModeKeys.TRAIN:
+
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        with tf.control_dependencies(update_ops):
+            # Define the optimizer (e.g. tf.train.AdamOptimizer)
+            optimizer = 
+
+            # Define the training operation and include global_step using
+            # tf.train.get_global_step()
+            train_op = 
+
+        return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
+
+    # Add evaluation metrics (for EVAL mode)
+    eval_metric_ops = {
+        "accuracy": tf.metrics.accuracy(
+            labels=labels, predictions=predictions["classes"]
+        )
+    }
+
+    return tf.estimator.EstimatorSpec(mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
