@@ -80,7 +80,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('config', help="path to configuration file")
-    parser.add_argument('--warm-start', action='store_true',
+    parser.add_argument('-w', '--warm-start', action='store_true',
         help="whether to start the model from checkpoints")
     parser.add_argument('-e', '--evaluate', action='store_true',
         help="whether to evaluate the model instead of training it")
