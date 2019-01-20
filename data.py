@@ -128,7 +128,7 @@ def input_fn(sources, train, params):
 
     features = {'image': images} 
     
-return features, labels
+    return features, labels
 
 
 if __name__ == '__main__':
