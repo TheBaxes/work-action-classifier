@@ -4,3 +4,6 @@ venv
 # Dataset
 dataset*
 .zip
+
+# IDEs generated files or folders
+.vscode
