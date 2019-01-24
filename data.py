@@ -1,6 +1,6 @@
 """Data module
 
-This module defines functions and operations for handling all stages of the 
+This module defines functions and operations for handling all stages of the
 data processing pipeline. Moreover, it may be used as a command line application
 to prepare the dataset in the following format:
 
@@ -36,22 +36,36 @@ Todo:
 """
 
 import os
+import shutil
+import zipfile
+from pathlib import Path
 
+import numpy as np
+from PIL import Image
+import requests
 import tensorflow as tf
+from scipy.misc import imread, imresize
+from sklearn.model_selection import train_test_split
+from glob import glob
+from tqdm import tqdm
 
-DEFAULT_URL = 'benchmark.ini.rub.de/Dataset/GTSRB_Final_Training_Images.zip'
+DEFAULT_URL = 'http://benchmark.ini.rub.de/Dataset/GTSRB_Final_Training_Images.zip'
 DEFAULT_COMPRESSED_FPATH = 'dataset.zip'
 
-def download_compressed_dataset(url):
+def download_compressed_dataset(url=DEFAULT_URL, filename=DEFAULT_COMPRESSED_FPATH, chunk_size=2000):
     """Downloads the dataset in compressed format.
-    
+
     This function does not return anything
     """
-    raise NotImplementedError
+    nfile = requests.get(url, stream=True)
 
-def prepare_dataset(fpath):
+    with open(str(Path(filename)), 'wb') as f:
+        for chunk in nfile.iter_content(chunk_size):
+            f.write(chunk)
+
+def prepare_dataset(fpath=DEFAULT_COMPRESSED_FPATH):
     """Prepare the dataset form the download file.
-    
+
     This function takes the filepath of the download file and prepares the data
     by dividing into 3 folders: training, validation and testing, each of which
     has examples of every available label in a proportion roughly to 70%, 20% and
@@ -60,11 +74,58 @@ def prepare_dataset(fpath):
     This function does not return anything
 
     """
-    raise NotImplementedError
+
+    dataset_folder = 'raw_dataset'
+    test_fraction = 0.2
+    train_fraction = 0.7
+
+    if not os.path.exists(dataset_folder):
+        with zipfile.ZipFile(fpath, "r") as z:
+            z.extractall(dataset_folder)
+    
+
+    data_train = []
+    data_test = []
+
+    for folder in os.listdir(os.path.join(dataset_folder, "GTSRB", "Final_Training", "Images")):
+
+        folder_data = glob(os.path.join(dataset_folder, "GTSRB", "Final_Training", "Images", folder, "*.ppm"))
+
+
+        folder_data = np.array(folder_data)
+
+        folder_data = np.random.permutation(folder_data)
+
+        N = int(len(folder_data) * train_fraction)
+        data_train.append(folder_data[:N])
+        data_test.append(folder_data[N:])
+
+    data_train = np.hstack(data_train)
+    data_test = np.hstack(data_test)
+    print(data_train[:10])
+    print(len(data_train))
+    print(len(data_test))
+    
+    for dataset_name, dataset in zip(["train", "test"], [data_train, data_test]):
+        
+
+        for filepath in tqdm(dataset, total=len(dataset)):
+            folder, name = filepath.split(os.sep)[-2:]
+            name = name.replace(".ppm", ".jpg")
+
+            new_image_path = os.path.join("dataset", dataset_name, folder, name)
+            os.makedirs(os.path.join("dataset", dataset_name, folder), exist_ok=True)
+
+            with Image.open(filepath) as img:
+                img.save(new_image_path)
+
+
+
+
 
 
 def find_sources(data_dir, mode='training', shuffle=True):
-    """List all sources of data with the respective label. 
+    """List all sources of data with the respective label.
 
     Args:
         data_dir (str): path to the directory with the data.
@@ -82,7 +143,6 @@ def find_sources(data_dir, mode='training', shuffle=True):
 
 def input_fn(sources, train, params):
     """Input function required by the estimator API.
-
     Args:
         sources (list): a list of tuples of (path/to/imagefile.ppm, label),
             where lable is an integer in [0, num_classes).
@@ -91,14 +151,12 @@ def input_fn(sources, train, params):
             depending on this value (e.g. training data should be shuffled).
         params (dict): dictionary holding parameters for some hyperparameters
             when feeding the data (e.g. batch_size and image_size).
-
     Returns:
         A tuple of (features, label). Features is a dictionary holding all
         relevant features by key (e.g. image tensor) and label is a tensor
         of integers.
-
     """
-    
+
     images, labels = zip(*sources)
     images, labels = list(images), list(labels)
 
@@ -108,11 +166,11 @@ def input_fn(sources, train, params):
     # Decode binary images
     images = images.map(lambda img: tf.image.decode_image(img, channels=3))
     # Cast the images to float32
-    images = 
+    images = None
     # Normalize the images by dividing the images by 255.0
-    images = 
+    images = None
     # Resize the images to the expected size given by the network
-    images = 
+    images = None
 
     labels = tf.data.Dataset.from_tensor_slices(labels)
 
@@ -126,23 +184,24 @@ def input_fn(sources, train, params):
     iterator = ds.make_one_shot_iterator()
     images, labels = iterator.get_next()
 
-    features = {'image': images} 
-    
+    features = {'image': images}
+
     return features, labels
 
 
+
 if __name__ == '__main__':
+    
+
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--url', 
+    parser.add_argument('--url', default=DEFAULT_URL,
         help='download link for the original training')
-    parser.add_argument('--fpath',
-        help="Path to the compressed download for the original tarining data")
-    
-    
-    args = parser.parse_known_args()
+    parser.add_argument('--fpath',  default=DEFAULT_COMPRESSED_FPATH,
+        help="Path to the compressed download for the original training data")
+
+    args = parser.parse_args()
 
     if not os.path.exists(args.fpath):
         download_compressed_dataset(args.url)
     prepare_dataset(args.fpath)
-
