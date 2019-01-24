@@ -2,6 +2,7 @@
 venv
 
 # Dataset
+raw_dataset*
 dataset*
 .zip
 
