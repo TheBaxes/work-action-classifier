@@ -39,6 +39,7 @@ import os
 import shutil
 import zipfile
 from pathlib import Path
+import random
 
 import numpy as np
 from PIL import Image
@@ -135,7 +136,24 @@ def find_sources(data_dir, mode='training', shuffle=True):
         to return the sources for the input_fn function defined bellow.
 
     """
-    raise NotImplementedError
+    dir_name = 'train' if mode == 'training' else 'test'
+    dir_name = os.path.join(data_dir, dir_name)
+    label_to_files = {
+        label: os.listdir(os.path.join(dir_name, label))
+        for label in os.listdir(dir_name)
+    }
+
+    sources = []
+    for label, fnames in label_to_files.items():
+        for fname in fnames:
+            fpath = os.path.join(dir_name, label, fname)
+            sources.append((fpath, int(label)))
+
+    if shuffle:
+        random.shuffle(sources)
+
+    return sources
+    
 
 def input_fn(sources, train, params):
     """Input function required by the estimator API.
