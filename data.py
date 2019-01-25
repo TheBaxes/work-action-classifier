@@ -178,13 +178,17 @@ def input_fn(sources, train, params):
     # Read images as binary data
     images = images.map(lambda img: tf.read_file(img))
     # Decode binary images
-    images = images.map(lambda img: tf.image.decode_image(img, channels=3))
+    images = images.map(lambda img: tf.image.decode_jpeg(img, channels=3))
     # Cast the images to float32
-    images = None
+    images = images.map(lambda img: tf.to_float(img))
     # Normalize the images by dividing the images by 255.0
-    images = None
+    images = images.map(lambda img: img/255.0)
     # Resize the images to the expected size given by the network
-    images = None
+    def helper(img):
+        hh = params['image_size']
+        img = tf.image.resize_images(img, (hh, hh))
+        return img
+    images = images.map(helper)
 
     labels = tf.data.Dataset.from_tensor_slices(labels)
 
