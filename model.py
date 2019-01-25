@@ -37,7 +37,14 @@ def model(inputs, num_classes, training):
 
     """
 
-    raise NotImplementedError
+    net = tf.layers.conv2d(inputs, 6, (3,3), strides=(1, 1), padding='same')
+    net = tf.layers.max_pooling2d(net, (2,2), (2,2))
+    net = tf.layers.conv2d(net, 16, (3,3), strides=(1, 1), padding='same')
+    net = tf.layers.max_pooling2d(net, (2,2), (2,2))
+    net = tf.layers.flatten(net)
+    net = tf.layers.dense(net, 120, activation=tf.nn.relu)
+    net = tf.layers.dense(net, 84, activation=tf.nn.relu)
+    return tf.layers.dense(net, num_classes)
 
 
 def model_fn(features, labels, mode, params):
@@ -68,10 +75,10 @@ def model_fn(features, labels, mode, params):
 
     predictions = {
       # Compute the predictions by taking argmax of the logits
-      "classes": 
+      "classes": tf.argmax(logits, axis=1),
       # Create probability predictions for each class by applying tf.nn.softmax
       # to de logits.
-      "probabilities": 
+      "probabilities": tf.nn.softmax(logits)
     }
 
     if mode == tf.estimator.ModeKeys.PREDICT:
@@ -79,7 +86,7 @@ def model_fn(features, labels, mode, params):
 
     # Calculate Loss (for both TRAIN and EVAL modes) usign 
     # tf.losses.sparse_softmax_cross_entropy
-    xentropy = 
+    xentropy = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits)
     loss = xentropy
     # Configure the Training Op (for TRAIN mode)
     if mode == tf.estimator.ModeKeys.TRAIN:
@@ -87,11 +94,11 @@ def model_fn(features, labels, mode, params):
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(update_ops):
             # Define the optimizer (e.g. tf.train.AdamOptimizer)
-            optimizer = 
+            optimizer = tf.train.AdamOptimizer(params['learning_rate'])
 
             # Define the training operation and include global_step using
             # tf.train.get_global_step()
-            train_op = 
+            train_op = optimizer.minimize(loss, global_step=tf.train.get_global_step())
 
         return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
 
