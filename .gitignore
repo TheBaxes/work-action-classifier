@@ -8,3 +8,6 @@ dataset*
 
 # IDEs folders and files
 .vscode
+
+# Python
+__pycache__
