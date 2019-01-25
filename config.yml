@@ -1,0 +1,21 @@
+# Dataset parameters
+image_size: 32
+shuffle_buffer: 512
+num_classes: 43
+# Training parameters
+num_epochs: 100
+batch_size: 256
+learning_rate: 0.001
+max_steps: 1000
+# Model parameters
+
+
+# Other parameters
+model_dir: 'checkpoints'
+data_dir: 'dataset'
+save_checkpoints_steps: 20
+save_summary_steps: 20
+log_frequency: 20
+eval_steps: 30
+start_delay_secs: 5
+throttle_secs: 5
