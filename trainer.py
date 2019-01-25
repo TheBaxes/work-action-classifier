@@ -43,15 +43,15 @@ def train_model(params):
         )
     )
 
-    sources = data.find_sources(params, mode='training')
+    sources = data.find_sources(params['data_dir'], mode='training')
     train_spec = tf.estimator.TrainSpec(
-        lambda: data.input_fn(train_sources, True, params),
+        lambda: data.input_fn(sources, True, params),
         max_steps=params['max_steps']
     )
 
-    sources = data.find_sources(params, mode='testing')
+    sources = data.find_sources(params['data_dir'], mode='testing')
     eval_spec = tf.estimator.EvalSpec(
-        lambda: data.input_fn(test_sources, False, params),
+        lambda: data.input_fn(sources, False, params),
         steps=params['eval_steps'],
         start_delay_secs=params['start_delay_secs'],
         throttle_secs=params['throttle_secs']
