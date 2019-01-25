@@ -118,11 +118,7 @@ def prepare_dataset(fpath=DEFAULT_COMPRESSED_FPATH):
 
             with Image.open(filepath) as img:
                 img.save(new_image_path)
-
-
-
-
-
+                
 
 def find_sources(data_dir, mode='training', shuffle=True):
     """List all sources of data with the respective label.
