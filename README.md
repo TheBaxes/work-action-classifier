@@ -6,7 +6,7 @@ This project is a hands on tutorial about TensorFlow's Estimator and Data APIs, 
 * `model.py`, in which we define the particular machine learning model (i.e. how we pass from input to output) as well as the loss function and optimization algorithm.
 * `trainer.py`, which takes the previous two modules and is responsible for training, evaluation and even deployment (although we will not cover deployment here, the Estimator API will automatically save the trained model).
 
-Moreover, we will have a separte `config.yml` file for keepin training and other configuration parameters. For this project we will be using the [German traffic signs dataset](http://benchmark.ini.rub.de/?section=gtsrb&subsection=dataset).
+Moreover, we will have a separte `config.yml` file for keepin training and other configuration parameters.
 
 The `data.py` module can be run as an script to prepare the dataset, which means downloading it and putting it into training, validation and testing subsets of the data, following thid format:
 
